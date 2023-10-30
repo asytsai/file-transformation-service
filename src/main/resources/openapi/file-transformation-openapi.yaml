@@ -1,0 +1,98 @@
+openapi: '3.0.0'
+info:
+  version: 1.0.0
+  title: File Transformation service
+
+paths:
+  /fileTransformation/{fileId}/binary:
+    post:
+      summary: Post the binary file to be transformed.
+      operationId: rebuildFileBinary
+      parameters:
+        - name: fileId
+          in: path
+          description: The id of the file.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 42
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: The file transformation was successful.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+        - FileTransformation
+
+components:
+  responses:
+    BadRequest:
+      description: The response shape of a bad request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized to perform an operation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    PayloadTooLarge:
+      description: The file is above the size limits of 74MB.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalError:
+      description: Internal server error.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ErrorResponse:
+      description: A common response object.
+      type: object
+      required:
+        - timestamp
+        - title
+        - detail
+      properties:
+        timestamp:
+          description: "Timestamp of the error."
+          type: string
+          format: date-time-offset
+          example: "2019-01-17T16:12:45.977Z"
+        title:
+          $ref: '#/components/schemas/ErrorType'
+        detail:
+          description: A human-readable explanation that may vary by environment.
+          type: string
+          example: Registration for oktauser001 is in progress, but not complete.
+
+    ErrorType:
+      description: Error scenarios.
+      type: string
+      enum:
+        - _0000__UNKNOWN
+        - _0100__OUTBOUND_REST_FAILURE
+        - _0110__INBOUND_REST_FAILURE
+        - _0111__INVALID_REST_REQUEST_PARAMETERS
+        - _1111__MAX_UPLOAD_SIZE_EXCEEDED
